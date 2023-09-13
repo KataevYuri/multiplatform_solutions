@@ -44,27 +44,25 @@ class _MainAppState extends State<MainApp> {
             Text(siteHeader),
             Text(siteResponseHeader),
             Expanded(child: SingleChildScrollView(child: Text(siteHTML))),
-            Expanded(
-              child: Row(children: [
-                Expanded(
-                  child: SizedBox(
-                    width: 200,
-                    child: TextFormField(
-                      controller: _controller,
-                    ),
+            Row(children: [
+              Expanded(
+                child: SizedBox(
+                  width: 200,
+                  child: TextFormField(
+                    controller: _controller,
                   ),
                 ),
-                ElevatedButton(
-                    onPressed: () async {
-                      Response response = await _loadHtmlPage();
-                      setState(() {
-                        siteHTML = response.data.toString();
-                        siteHeader = response.headers.toString();
-                      });
-                    },
-                    child: const Text('Загрузить сайт'))
-              ]),
-            )
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    Response response = await _loadHtmlPage();
+                    setState(() {
+                      siteHTML = response.data.toString();
+                      siteHeader = response.headers.toString();
+                    });
+                  },
+                  child: const Text('Загрузить сайт'))
+            ])
           ],
         ),
       ),
