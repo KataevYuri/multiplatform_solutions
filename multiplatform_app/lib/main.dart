@@ -46,10 +46,12 @@ class _MainAppState extends State<MainApp> {
             Expanded(child: SingleChildScrollView(child: Text(siteHTML))),
             Expanded(
               child: Row(children: [
-                SizedBox(
-                  width: 200,
-                  child: TextFormField(
-                    controller: _controller,
+                Expanded(
+                  child: SizedBox(
+                    width: 200,
+                    child: TextFormField(
+                      controller: _controller,
+                    ),
                   ),
                 ),
                 ElevatedButton(
