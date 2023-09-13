@@ -43,7 +43,7 @@ class _MainAppState extends State<MainApp> {
           children: [
             Text(siteHeader),
             Text(siteResponseHeader),
-            Expanded(child: Text(siteHTML)),
+            Expanded(child: SingleChildScrollView(child: Text(siteHTML))),
             Expanded(
               child: Row(children: [
                 SizedBox(
@@ -56,7 +56,8 @@ class _MainAppState extends State<MainApp> {
                     onPressed: () async {
                       Response response = await _loadHtmlPage();
                       setState(() {
-                        siteHTML = response.body;
+                        siteHTML = response.data.toString();
+                        siteHeader = response.headers.toString();
                       });
                     },
                     child: const Text('Загрузить сайт'))
