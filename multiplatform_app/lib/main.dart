@@ -1,5 +1,5 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MainApp());
@@ -13,11 +13,13 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  String siteHeader = "";
+  String siteHeader = "siteHeader";
 
-  String siteResponseHeader = "";
+  String siteResponseHeader = "siteResponseHeader";
 
-  String siteHTML = "";
+  String siteHTML = "siteHTML";
+
+  bool isLoaded = false;
 
   final _controller = TextEditingController();
 
@@ -27,11 +29,8 @@ class _MainAppState extends State<MainApp> {
     super.initState();
   }
 
-  Future<void> _loadHtmlPage() async {
-    final result = await http.get(Uri.parse(_controller.text));
-    setState(() {
-      siteHTML = result.body;
-    });
+  Future<Response> _loadHtmlPage() async {
+    return await Dio().get(_controller.text);
   }
 
   @override
@@ -39,6 +38,8 @@ class _MainAppState extends State<MainApp> {
     return MaterialApp(
       home: Scaffold(
         body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(siteHeader),
             Text(siteResponseHeader),
@@ -52,7 +53,12 @@ class _MainAppState extends State<MainApp> {
                   ),
                 ),
                 ElevatedButton(
-                    onPressed: _loadHtmlPage,
+                    onPressed: () async {
+                      Response response = await _loadHtmlPage();
+                      setState(() {
+                        siteHTML = response.body;
+                      });
+                    },
                     child: const Text('Загрузить сайт'))
               ]),
             )
