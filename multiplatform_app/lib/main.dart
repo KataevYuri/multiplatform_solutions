@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/html_parser.dart';
 
 void main() {
   runApp(const MainApp());
@@ -29,8 +30,10 @@ class _MainAppState extends State<MainApp> {
     super.initState();
   }
 
-  Future<Response> _loadHtmlPage() async {
-    return await Dio().get(_controller.text);
+  Future<(String, String, String)> _loadHtmlPage() async {
+    final response = await Dio().get(_controller.text);
+    final htmldoc = HtmlParser.parseHTML(response.data);
+    return (htmldoc.body.toString(), htmldoc.head.toString(), "");
   }
 
   @override
@@ -55,10 +58,10 @@ class _MainAppState extends State<MainApp> {
               ),
               ElevatedButton(
                   onPressed: () async {
-                    Response response = await _loadHtmlPage();
+                    final response = await _loadHtmlPage();
                     setState(() {
-                      siteHTML = response.data.toString();
-                      siteHeader = response.headers.toString();
+                      siteHTML = response.$1;
+                      siteHeader = response.$2;
                     });
                   },
                   child: const Text('Загрузить сайт'))
