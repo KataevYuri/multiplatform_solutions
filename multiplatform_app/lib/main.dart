@@ -1,9 +1,14 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import 'package:html/parser.dart' as htmlparser;
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 void main() {
   runApp(const MainApp());
@@ -32,22 +37,46 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     _controller.text = 'https://flutter.dev';
 
-    _wvcontroller = WebViewController()
+    late final PlatformWebViewControllerCreationParams params;
+    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+      params = WebKitWebViewControllerCreationParams(
+        allowsInlineMediaPlayback: true,
+        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+      );
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
+
+    _wvcontroller = WebViewController.fromPlatformCreationParams(params);
+    // #enddocregion platform_features
+
+    _wvcontroller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            debugPrint("Loading: $progress%");
-          },
-          onPageStarted: (String url) {},
-          onPageFinished: (String url) {},
-          onWebResourceError: (WebResourceError error) {},
-          onNavigationRequest: (NavigationRequest request) {
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(_controller.text));
+      ..loadRequest(Uri.parse('https://flutter.dev'));
+
+    // #docregion platform_features
+    if (_wvcontroller.platform is AndroidWebViewController) {
+      AndroidWebViewController.enableDebugging(true);
+      (_wvcontroller.platform as AndroidWebViewController)
+          .setMediaPlaybackRequiresUserGesture(false);
+    }
+
+    // _wvcontroller = WebViewController()
+    //   ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    //   ..setNavigationDelegate(
+    //     NavigationDelegate(
+    //       onProgress: (int progress) {
+    //         debugPrint("Loading: $progress%");
+    //       },
+    //       onPageStarted: (String url) {},
+    //       onPageFinished: (String url) {},
+    //       onWebResourceError: (WebResourceError error) {},
+    //       onNavigationRequest: (NavigationRequest request) {
+    //         return NavigationDecision.navigate;
+    //       },
+    //     ),
+    //   )
+    //   ..loadRequest(Uri.parse(_controller.text));
 
     super.initState();
   }
@@ -65,46 +94,53 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(defaultTargetPlatform.toString(),
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            Text(siteHeader,
-                style:
-                    const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            Text(siteResponseHeader,
-                style: const TextStyle(color: Colors.red, fontSize: 16)),
-            Expanded(
-              child: SingleChildScrollView(
-                  child: WebViewWidget(
-                controller: _wvcontroller,
-              )),
-            ),
-            Row(children: [
+      home: SafeArea(
+        child: Scaffold(
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  kIsWeb
+                      ? 'WEB Platform'
+                      : '${Platform.operatingSystem} - ver.${Platform.operatingSystemVersion}',
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(siteHeader,
+                  style: const TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.bold)),
+              Text(siteResponseHeader,
+                  style: const TextStyle(color: Colors.red, fontSize: 16)),
               Expanded(
-                child: SizedBox(
-                  width: 200,
-                  child: TextFormField(
-                    controller: _controller,
+                child: SingleChildScrollView(
+                  //child: Text(siteHTML),
+                  child: WebViewWidget(
+                    controller: _wvcontroller,
                   ),
                 ),
               ),
-              ElevatedButton(
-                  onPressed: () async {
-                    final response = await _loadHtmlPage();
-                    setState(() {
-                      siteHTML = response.$1;
-                      siteHeader = response.$2;
-                      siteResponseHeader = response.$3;
-                    });
-                  },
-                  child: const Text('Загрузить сайт'))
-            ])
-          ],
+              Row(children: [
+                Expanded(
+                  child: SizedBox(
+                    width: 200,
+                    child: TextFormField(
+                      controller: _controller,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                    onPressed: () async {
+                      final response = await _loadHtmlPage();
+                      setState(() {
+                        siteHTML = response.$1;
+                        siteHeader = response.$2;
+                        siteResponseHeader = response.$3;
+                      });
+                    },
+                    child: const Text('Загрузить сайт'))
+              ])
+            ],
+          ),
         ),
       ),
     );
