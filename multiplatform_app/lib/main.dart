@@ -26,13 +26,13 @@ class _MainAppState extends State<MainApp> {
   bool isLoaded = false;
 
   final _controller = TextEditingController();
-  final _wvcontroller = WebViewController();
+  late final WebViewController _wvcontroller;
 
   @override
   void initState() {
     _controller.text = 'https://flutter.dev';
 
-    _wvcontroller
+    _wvcontroller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
